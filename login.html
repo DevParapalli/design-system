@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proxima · Sign in</title>
+<meta name="description" content="Sign in to the Proxima console.">
+
+<link rel="stylesheet" href="css/proxima.css">
+<script>(function(){try{var h=document.documentElement,t=localStorage.getItem('proxima-theme'),a=localStorage.getItem('proxima-accent'),b=localStorage.getItem('proxima-bg');if(t==='light')h.classList.add('theme-light');if(a&&a!=='indigo')h.classList.add('accent-'+a);if(b==='flat')h.classList.add('bg-flat');}catch(e){}})();</script>
+<script src="js/proxima.js" defer></script>
+</head>
+<body>
+
+<canvas id="ink" width="1400" height="900" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="auth">
+  <div class="auth-card">
+    <a class="brand" href="index.html"><span class="orb" aria-hidden="true"></span><span>Proxima</span></a>
+    <h1>Sign in to <em class="serif-em">jupiter</em></h1>
+    <p class="sub">4 hosts reporting. 2 alerts open.</p>
+
+    <form onsubmit="return false">
+      <div class="field">
+        <label for="l-email">Email</label>
+        <input type="email" id="l-email" placeholder="you@example.dev" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="l-pass">Password</label>
+        <input type="password" id="l-pass" placeholder="••••••••••" autocomplete="current-password">
+      </div>
+      <div class="row">
+        <label class="check"><input type="checkbox" checked> Stay signed in</label>
+        <a href="#">Forgot it?</a>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit" onclick="location.href='dashboard.html'">Sign in</button>
+    </form>
+
+    <div class="auth-div">or</div>
+    <div class="auth-alt">
+      <button class="btn btn-glass btn-block" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V8a5 5 0 0 1 5-5z"/><path d="M8 15.5V21l4-2 4 2v-5.5"/></svg>
+        Use a passkey
+      </button>
+      <button class="btn btn-glass btn-block" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Single sign-on
+      </button>
+    </div>
+
+    <p class="auth-fine">Running this yourself? <a href="landing.html">Read about Proxima</a>.</p>
+  </div>
+</div>
+
+<div class="fab" id="fab">
+  <div class="fab-panel" role="group" aria-label="Display options">
+    <div class="fab-row"><span>Theme</span>
+      <div class="fseg" role="group" aria-label="Theme"><button id="th-dark" class="on" type="button">Dark</button><button id="th-light" type="button">Light</button></div>
+    </div>
+    <div class="fab-row"><span>Background</span>
+      <div class="fseg" role="group" aria-label="Background"><button id="bg-ink" class="on" type="button">Ink</button><button id="bg-flat" type="button">Flat</button></div>
+    </div>
+    <div class="fab-row"><span>Accent</span>
+      <div class="fseg-dots" role="group" aria-label="Accent color">
+        <button id="ac-indigo" class="dot on" style="--dc:#8D8DF5" type="button" aria-label="Indigo accent"></button>
+        <button id="ac-teal" class="dot" style="--dc:#5FD3C8" type="button" aria-label="Teal accent"></button>
+        <button id="ac-ember" class="dot" style="--dc:#F2A566" type="button" aria-label="Ember accent"></button>
+        <button id="ac-lime" class="dot" style="--dc:#CFE763" type="button" aria-label="Lime accent"></button>
+      </div>
+    </div>
+  </div>
+  <button class="fab-btn" id="fab-toggle" type="button" aria-expanded="false" aria-label="Display options">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2.5"/><circle cx="8" cy="16" r="2.5"/></svg>
+  </button>
+</div>
+
+</body>
+</html>

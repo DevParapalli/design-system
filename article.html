@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proxima · Why I built my own console</title>
+<link rel="stylesheet" href="css/proxima.css">
+<script>(function(){try{var h=document.documentElement,t=localStorage.getItem('proxima-theme'),a=localStorage.getItem('proxima-accent'),b=localStorage.getItem('proxima-bg');if(t==='light')h.classList.add('theme-light');if(a&&a!=='indigo')h.classList.add('accent-'+a);if(b==='flat')h.classList.add('bg-flat');}catch(e){}})();</script>
+<script src="js/proxima.js" defer></script>
+</head>
+<body>
+
+<canvas id="ink" width="1400" height="900" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<nav class="top">
+  <a class="logo" href="index.html"><span class="orb" aria-hidden="true"></span>Proxima</a>
+  <span class="links">
+    <a href="landing.html">Overview</a>
+    <a href="docs.html">Design</a>
+    <a href="#" class="on">Notes</a>
+  </span>
+  <span class="cta"><a class="btn btn-glass" href="dashboard.html">Open the console</a></span>
+</nav>
+
+<article class="article-page">
+  <header class="article-head">
+    <div class="eyebrow">( <b>NOTES</b> · 07 )</div>
+    <h1>Why I built my <em class="serif-em">own</em> console</h1>
+    <div class="byline">
+      <span class="av">DP</span>
+      <div class="who">
+        <b>Devansh Parapalli</b>
+        <span>26 JUL 2026 · 5 MIN READ</span>
+      </div>
+    </div>
+    <div class="tags">
+      <span class="pill pill-mute">Homelab</span>
+      <span class="pill pill-mute">Design</span>
+      <span class="pill pill-mute">Proxima</span>
+    </div>
+  </header>
+
+  <div class="prose">
+    <p class="lede">I run four machines and about thirty services on them. For two years I checked on all of it by opening a terminal and running the same handful of commands in the same order. It worked until the night I spent forty minutes on a broken photo library that turned out to be a full disk on a completely different box.</p>
+
+    <p>The tools that solve this already exist. I tried several. Every one of them wanted more memory than the services it was watching, and none of them told me the one thing I actually needed, which is whether anything is wrong right now. So I wrote Proxima. It is one page. If everything is fine, it is quiet.</p>
+
+    <h2>Everything is named after something in the sky</h2>
+
+    <p>Physical machines get planets. The virtual machines running on them get that planet's moons. Anything in the cloud gets a gas, because cloud instances come and go and the noble gases are the ones that do not react with anything.</p>
+
+    <pre><code>jupiter            main workstation
+  ├── io           git and CI
+  ├── europa       notes and files
+  ├── ganymede     media
+  └── callisto     spare
+
+mars               secondary box, usually off
+  ├── phobos
+  └── deimos
+
+argon              general compute
+argonide           standby for argon
+kryptonane         database, stateful
+argonene           CI runner, dies after every job</code></pre>
+
+    <p>This sounds like a joke and it partly is, but it has earned its place. The names are short, they are easy to say out loud, and the shape of the name tells you what kind of thing it is before you look anything up. If I say <code>ganymede</code> you know it is a virtual machine on <code>jupiter</code>. If I say <code>argonene</code> you know it is disposable.</p>
+
+    <blockquote>
+      Oh no, hydrogen is down, requests cannot get to callisto.
+      <footer>an actual sentence I have said out loud</footer>
+    </blockquote>
+
+    <h2>The console had to be dark</h2>
+
+    <p>Not because dark mode is fashionable. Because I look at this thing at night, in a room with the lights off, and a white page at 2am is a physical event. But most dark interfaces get one thing wrong: they are grey. Flat grey feels like a settings panel that someone inverted.</p>
+
+    <p>So every neutral in Proxima leans slightly blue. The background is <code>#0A0B12</code>, not black. Panels are <code>#12141F</code>. The difference is small enough that you would not name it if you saw it, and large enough that the whole thing feels like a place instead of an absence of light.</p>
+
+    <p>Colour then has exactly two jobs, and they never overlap:</p>
+
+    <ul>
+      <li><strong>State</strong> lives in pills. Green means fine, amber means look at this soon, red means it is broken, blue means this is just information. Every pill has a word in it as well as a colour.</li>
+      <li><strong>Data</strong> lives in charts, in a separate darker set of colours picked to stay readable on both the dark and light themes.</li>
+    </ul>
+
+    <p>Red is the one I am strict about. It appears when something is genuinely broken and at no other time. Not for emphasis, not for a big number, not for a delete button that only opens a confirm dialog. That way, when red shows up, I move.</p>
+
+    <figure>
+      <div class="card chart-card" style="padding:18px">
+        <h3>Requests per hour</h3>
+        <div class="sub">The solid line is measured. The dotted line is where it is heading.</div>
+        <div class="chart-wrap">
+          <svg id="art-spark" class="spark" viewBox="0 0 560 150" preserveAspectRatio="none" role="img" aria-label="Requests per hour with a forecast"></svg>
+          <div class="tooltip" id="tt-art"></div>
+        </div>
+        <div class="legend"><span class="li"><i></i>Measured</span><span class="li fc"><i></i>Forecast</span></div>
+      </div>
+      <figcaption>Every trend continues as a dotted line, so the question is always where this is going, not just where it has been.</figcaption>
+    </figure>
+
+    <h2>One line per service</h2>
+
+    <p>The first version of the services table showed everything at once. Image tag, ports, memory, CPU, restart count, uptime, last deploy. Eleven columns. It was complete and it was useless, because scanning it took longer than running the commands by hand.</p>
+
+    <p>Now a service is one line. Name, what it is, which host it is on, two or three facts, and a status pill. That is all. If I want the rest I click the row and it opens: the full detail grid, a note about what is wrong, and the buttons that act on it. The actions live inside the expanded row on purpose. A collapsed row offers exactly one thing to do, which is open it.</p>
+
+    <p>The rule I keep coming back to is that density should be something you ask for. A dashboard that dumps everything on you has moved its work onto your eyes.</p>
+
+    <hr>
+
+    <p>None of this is clever. Tinted darks, one accent colour, strict colour meanings, hide detail until asked. Each piece shows up in half the tools I admire. What makes it a system rather than a mood is refusing the exceptions: no second bright colour because a chart looked dull, no red on a number that is merely large, no eleventh column because the data happened to be there.</p>
+
+    <p>At 2am I do not need more information. I need to already know where to look.</p>
+
+    <p class="foot-note">The interface in this note is the same design system the rest of this site is built from. The components are documented in the <a href="docs.html">design foundation</a>, and the console itself is the <a href="dashboard.html">overview page</a>.</p>
+  </div>
+</article>
+
+<div class="fab" id="fab">
+  <div class="fab-panel" role="group" aria-label="Display options">
+    <div class="fab-row"><span>Theme</span>
+      <div class="fseg" role="group" aria-label="Theme"><button id="th-dark" class="on" type="button">Dark</button><button id="th-light" type="button">Light</button></div>
+    </div>
+    <div class="fab-row"><span>Background</span>
+      <div class="fseg" role="group" aria-label="Background"><button id="bg-ink" class="on" type="button">Ink</button><button id="bg-flat" type="button">Flat</button></div>
+    </div>
+    <div class="fab-row"><span>Accent</span>
+      <div class="fseg-dots" role="group" aria-label="Accent color">
+        <button id="ac-indigo" class="dot on" style="--dc:#8D8DF5" type="button" aria-label="Indigo accent"></button>
+        <button id="ac-teal" class="dot" style="--dc:#5FD3C8" type="button" aria-label="Teal accent"></button>
+        <button id="ac-ember" class="dot" style="--dc:#F2A566" type="button" aria-label="Ember accent"></button>
+        <button id="ac-lime" class="dot" style="--dc:#CFE763" type="button" aria-label="Lime accent"></button>
+      </div>
+    </div>
+  </div>
+  <button class="fab-btn" id="fab-toggle" type="button" aria-expanded="false" aria-label="Display options">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2.5"/><circle cx="8" cy="16" r="2.5"/></svg>
+  </button>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+  Proxima.spark(document.getElementById('art-spark'), {
+    actual: [14, 16, 13, 18, 22, 19, 24, 21, 26, 23, 28, 25, 22, 27, 31, 28, 24, 26, 30, 27, 25, 29, 26, 23],
+    forecast: [23, 21, 22, 20, 19, 18],
+    min: 8, max: 34,
+    tooltip: document.getElementById('tt-art'),
+    unit: 'k req'
+  });
+});
+</script>
+</body>
+</html>

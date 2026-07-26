@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proxima · Alert studio</title>
+<link rel="stylesheet" href="css/proxima.css">
+<script>(function(){try{var h=document.documentElement,t=localStorage.getItem('proxima-theme'),a=localStorage.getItem('proxima-accent'),b=localStorage.getItem('proxima-bg');if(t==='light')h.classList.add('theme-light');if(a&&a!=='indigo')h.classList.add('accent-'+a);if(b==='flat')h.classList.add('bg-flat');}catch(e){}})();</script>
+<script src="js/proxima.js" defer></script>
+</head>
+<body>
+
+<canvas id="ink" width="1400" height="900" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="savebar" id="savebar" role="status" aria-live="polite">
+  <span class="sdot" aria-hidden="true"></span>
+  <span class="n"><b>0</b> unsaved changes</span>
+  <button class="btn btn-ghost btn-sm" type="button" data-discard>Discard</button>
+  <button class="btn btn-primary btn-sm" type="button" data-save>Save rule</button>
+</div>
+
+<div class="shell">
+  <aside class="side">
+    <a class="brand" href="index.html"><span class="orb" aria-hidden="true"></span><span>Proxima<small>Console</small></span></a>
+    <span class="rail-label">Infrastructure</span>
+    <nav aria-label="Infrastructure">
+      <a href="dashboard.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Overview</a>
+      <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7.5h.01M7 17h.01"/></svg>Hosts</a>
+      <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 7.5 12 12l9-4.5L12 3z"/><path d="M3 16.5 12 21l9-4.5M3 12l9 4.5L21 12"/></svg>Services</a>
+      <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>Alerts<span class="badge">2</span></a>
+      <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 20h16"/></svg>Deploys</a>
+      <a href="#"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Backups</a>
+    </nav>
+    <span class="rail-label">Workspace</span>
+    <nav aria-label="Workspace">
+      <a href="#" class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="8" height="16" rx="2"/><rect x="13" y="4" width="8" height="16" rx="2"/></svg>Alert studio</a>
+      <a href="settings.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2.5"/><circle cx="8" cy="16" r="2.5"/></svg>Settings</a>
+      <a href="docs.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg>Docs</a>
+    </nav>
+    <div class="foot">
+      <span class="av">DP</span>
+      <div class="who"><b>Devansh Parapalli</b><span>admin · jupiter</span></div>
+    </div>
+  </aside>
+
+  <div>
+    <div class="topbar">
+      <a class="brand brand-sm" href="index.html"><span class="orb" aria-hidden="true"></span><span>Proxima</span></a>
+      <label class="input"><span aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.5-4.5"/></svg></span><input type="text" placeholder="Search rules"></label>
+      <div class="right">
+        <span class="live"><i></i>Backtest on 24h of history</span>
+        <button class="iconbtn" type="button" aria-label="Alerts"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 19a2.5 2.5 0 0 0 4 0"/></svg><span class="bdot" aria-hidden="true"></span></button>
+      </div>
+    </div>
+
+    <main class="main">
+      <div class="page-head">
+        <div>
+          <h1>Alert <em class="serif-em">studio</em></h1>
+          <div class="when">Draft · rule-0142 · never published</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-glass" type="button">Duplicate</button>
+          <button class="btn btn-ghost" type="button">Send a test →</button>
+        </div>
+      </div>
+
+      <div class="panes">
+        <!-- compose -->
+        <form class="pane" id="rule-form" data-savebar="#savebar" onsubmit="return false">
+          <header>
+            <h2>Definition</h2>
+            <span class="u-right"></span>
+            <span class="chip-f">edits apply live</span>
+          </header>
+          <section class="form-section">
+            <div class="body">
+              <div class="field">
+                <label for="r-name">Rule name</label>
+                <input type="text" id="r-name" value="Slow responses on argon">
+              </div>
+              <div class="field">
+                <label for="r-desc">What to do about it</label>
+                <textarea id="r-desc" style="min-height:72px">Check caddy first, then the database connection pool on kryptonane.</textarea>
+                <span class="help">This shows up inside the alert when you open it at 2am.</span>
+              </div>
+              <div class="fieldrow">
+                <div class="field">
+                  <label for="r-labels">Labels</label>
+                  <input type="text" id="r-labels" value="latency, argon, web">
+                  <span class="help">Comma separated. Used for filtering and grouping.</span>
+                </div>
+                <div class="field">
+                  <label for="r-runbook">Runbook link</label>
+                  <input type="url" id="r-runbook" value="https://git.home/notes/slow-argon">
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <header><h2>Trigger</h2></header>
+          <section class="form-section">
+            <div class="body">
+              <div class="fieldrow">
+                <div class="field">
+                  <label for="r-metric">Metric</label>
+                  <span class="selwrap"><select id="r-metric">
+                    <option selected>Response time p95 (ms)</option>
+                    <option>CPU load average</option>
+                    <option>Memory used (%)</option>
+                    <option>Disk used (%)</option>
+                    <option>Error rate (%)</option>
+                  </select></span>
+                </div>
+                <div class="field">
+                  <label for="r-op">Condition</label>
+                  <span class="selwrap"><select id="r-op">
+                    <option value="gt" selected>goes above</option>
+                    <option value="lt">drops below</option>
+                  </select></span>
+                </div>
+                <div class="field">
+                  <label for="r-threshold">Threshold</label>
+                  <input type="number" id="r-threshold" value="24" min="8" max="34" step="1">
+                  <span class="help">Try 8 through 34 and watch the match count.</span>
+                </div>
+              </div>
+              <div class="setrow">
+                <div class="info"><b>Check every</b><span>How often Proxima samples the metric.</span></div>
+                <div class="ctl"><div class="seg" id="r-interval" role="group" aria-label="Check interval"><button type="button">30 s</button><button class="on" type="button">1 m</button><button type="button">5 m</button></div></div>
+              </div>
+              <div class="setrow">
+                <div class="info"><b>Must hold for</b><span>How long the condition stays true before it fires.</span></div>
+                <div class="ctl"><div class="seg" id="r-window" role="group" aria-label="Sustained window"><button type="button">1 m</button><button class="on" type="button">5 m</button><button type="button">15 m</button></div></div>
+              </div>
+              <div class="fieldrow">
+                <div class="field">
+                  <label for="r-groupby">Group alerts by</label>
+                  <span class="selwrap"><select id="r-groupby">
+                    <option selected>Host</option>
+                    <option>Service</option>
+                    <option>Do not group</option>
+                  </select></span>
+                  <span class="help">One alert per group instead of one per match.</span>
+                </div>
+                <div class="field">
+                  <label for="r-baseline">Compare against</label>
+                  <span class="selwrap"><select id="r-baseline">
+                    <option selected>A fixed threshold</option>
+                    <option>The same hour last week</option>
+                    <option>A 7 day rolling median</option>
+                  </select></span>
+                </div>
+              </div>
+              <div class="setrow">
+                <div class="info"><b>Close it automatically</b><span>Resolve the alert when the metric comes back to normal.</span></div>
+                <div class="ctl"><button class="toggle on" type="button" role="switch" aria-checked="true" aria-label="Close automatically"></button></div>
+              </div>
+            </div>
+          </section>
+
+          <header><h2>Scope</h2></header>
+          <section class="form-section">
+            <div class="body">
+              <div class="field">
+                <label for="r-scope">Watch</label>
+                <span class="selwrap"><select id="r-scope">
+                  <option selected>Everything on argon (12 services)</option>
+                  <option>Everything behind caddy (8 services)</option>
+                  <option>All hosts (33 services)</option>
+                  <option>Just kryptonane (3 services)</option>
+                </select></span>
+              </div>
+              <div class="field">
+                <label for="r-exclude">Except</label>
+                <input type="text" id="r-exclude" value="argonene, *-staging">
+                <span class="help">Names or patterns to leave out. CI runners are noisy by design.</span>
+              </div>
+              <div class="setrow">
+                <div class="info"><b>Stay quiet during maintenance</b><span>Skip anything inside a scheduled window.</span></div>
+                <div class="ctl"><button class="toggle on" type="button" role="switch" aria-checked="true" aria-label="Quiet during maintenance"></button></div>
+              </div>
+              <div class="setrow">
+                <div class="info"><b>Stay quiet while a host reboots</b><span>Give a rebooting host two minutes before complaining.</span></div>
+                <div class="ctl"><button class="toggle on" type="button" role="switch" aria-checked="true" aria-label="Quiet during reboot"></button></div>
+              </div>
+            </div>
+          </section>
+
+          <header><h2>Delivery</h2></header>
+          <section class="form-section">
+            <div class="body">
+              <div class="setrow">
+                <div class="info"><b>Severity</b><span>Sets the pill, the channels and whether it can wake you.</span></div>
+                <div class="ctl"><div class="seg" id="r-sev" role="group" aria-label="Severity"><button type="button" data-sev="rose">Critical</button><button class="on" type="button" data-sev="amber">High</button><button type="button" data-sev="mute">Low</button></div></div>
+              </div>
+              <div class="setrow">
+                <div class="info"><b>Channels</b><span>Critical always adds a phone push, whatever is set here.</span></div>
+                <div class="ctl">
+                  <label class="check"><input type="checkbox" id="r-push" checked> Push</label>
+                  <label class="check"><input type="checkbox" id="r-email" checked> Email</label>
+                  <label class="check"><input type="checkbox" id="r-webhook"> Webhook</label>
+                </div>
+              </div>
+              <div class="fieldrow">
+                <div class="field">
+                  <label for="r-renotify">Remind me again after</label>
+                  <span class="selwrap"><select id="r-renotify">
+                    <option>Never</option>
+                    <option selected>30 minutes</option>
+                    <option>2 hours</option>
+                    <option>Once a day</option>
+                  </select></span>
+                </div>
+                <div class="field">
+                  <label for="r-quiet">Outside waking hours</label>
+                  <span class="selwrap"><select id="r-quiet">
+                    <option>Send it anyway</option>
+                    <option selected>Hold until 08:00</option>
+                    <option>Drop it</option>
+                  </select></span>
+                </div>
+              </div>
+              <div class="setrow">
+                <div class="info"><b>Start it paused</b><span>Save the rule but do not let it fire yet.</span></div>
+                <div class="ctl"><button class="toggle" type="button" role="switch" aria-checked="false" aria-label="Start paused"></button></div>
+              </div>
+            </div>
+          </section>
+        </form>
+
+        <!-- preview -->
+        <div class="pane pane-sticky" aria-live="polite">
+          <header>
+            <h2>Preview</h2>
+            <span class="u-right"></span>
+            <span class="live"><i></i>last 24 hours</span>
+          </header>
+
+          <div class="pane-preview">
+            <span class="eyebrow">( HOW THE ALERT WILL LOOK )</span>
+            <div class="card" style="background:var(--glass-2)">
+              <div class="u-flex" style="gap:8px">
+                <span class="pill pill-amber" id="p-sev"><i class="dot"></i>High</span>
+                <span class="chip-f" id="p-scope">12 services</span>
+                <span class="u-right"></span>
+                <span class="t-data">now</span>
+              </div>
+              <h3 style="font-size:15.5px;font-weight:540;color:var(--ink-hi);margin:12px 0 4px" id="p-name">Slow responses on argon</h3>
+              <p style="font-size:13px" id="p-cond">Response time p95 (ms) goes above 24 for 5 m</p>
+              <div class="callout u-mt-1" id="p-callout"><span aria-hidden="true">!</span><span><b>What to do.</b> <span id="p-desc">Check caddy first, then the database connection pool on kryptonane.</span></span></div>
+              <div class="pill-row u-mt-1" id="p-channels">
+                <span class="chip-f">push</span><span class="chip-f">email</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card chart-card">
+            <h3>Backtest</h3>
+            <div class="sub">The metric over the last 24 hours. The dashed line is your threshold.</div>
+            <div class="chart-wrap">
+              <svg id="bt-spark" class="spark" viewBox="0 0 560 150" preserveAspectRatio="none" role="img" aria-label="The metric over 24 hours compared against the configured threshold"></svg>
+              <div class="tooltip" id="tt-bt"></div>
+            </div>
+            <div class="u-flex u-mt-2" style="gap:24px">
+              <div>
+                <div class="t-label" style="margin-bottom:6px">Would have fired</div>
+                <div style="font-size:26px;font-weight:490;color:var(--ink-hi);font-variant-numeric:tabular-nums" id="p-fires">12×</div>
+              </div>
+              <div>
+                <div class="t-label" style="margin-bottom:6px">Verdict</div>
+                <div class="u-flex" style="gap:8px"><span class="pill pill-mint" id="p-noise"><i class="dot"></i>Sensible</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card chart-card">
+            <h3>What it is watching</h3>
+            <div class="sub">A sample of the current selection</div>
+            <div class="feed">
+              <div class="fitem"><time>caddy</time><span class="fdot mint" aria-hidden="true"></span><p><b>argon</b> 14 ms p95, well under</p></div>
+              <div class="fitem"><time>api</time><span class="fdot amber" aria-hidden="true"></span><p><b>argon</b> 27 ms p95, over the line</p></div>
+              <div class="fitem"><time>web</time><span class="fdot mint" aria-hidden="true"></span><p><b>argon</b> 19 ms p95, well under</p></div>
+              <div class="fitem"><time>search</time><span class="fdot rose" aria-hidden="true"></span><p><b>argon</b> 31 ms p95, worst offender</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="fab" id="fab">
+  <div class="fab-panel" role="group" aria-label="Display options">
+    <div class="fab-row"><span>Theme</span>
+      <div class="fseg" role="group" aria-label="Theme"><button id="th-dark" class="on" type="button">Dark</button><button id="th-light" type="button">Light</button></div>
+    </div>
+    <div class="fab-row"><span>Background</span>
+      <div class="fseg" role="group" aria-label="Background"><button id="bg-ink" class="on" type="button">Ink</button><button id="bg-flat" type="button">Flat</button></div>
+    </div>
+    <div class="fab-row"><span>Accent</span>
+      <div class="fseg-dots" role="group" aria-label="Accent color">
+        <button id="ac-indigo" class="dot on" style="--dc:#8D8DF5" type="button" aria-label="Indigo accent"></button>
+        <button id="ac-teal" class="dot" style="--dc:#5FD3C8" type="button" aria-label="Teal accent"></button>
+        <button id="ac-ember" class="dot" style="--dc:#F2A566" type="button" aria-label="Ember accent"></button>
+        <button id="ac-lime" class="dot" style="--dc:#CFE763" type="button" aria-label="Lime accent"></button>
+      </div>
+    </div>
+  </div>
+  <button class="fab-btn" id="fab-toggle" type="button" aria-expanded="false" aria-label="Display options">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2.5"/><circle cx="8" cy="16" r="2.5"/></svg>
+  </button>
+</div>
+
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+  var series = [14, 16, 13, 18, 22, 19, 24, 21, 26, 23, 28, 25, 22, 27, 31, 28, 24, 26, 30, 27, 25, 29, 26, 23];
+  var svg = document.getElementById('bt-spark');
+  var $ = function (id) { return document.getElementById(id); };
+
+  function activeIn(id, fallback) {
+    var b = $(id).querySelector('button.on');
+    return b || fallback;
+  }
+
+  function render() {
+    var name = $('r-name').value.trim() || 'Untitled rule';
+    var metric = $('r-metric').value;
+    var opText = $('r-op').selectedOptions[0].textContent;
+    var above = $('r-op').value === 'gt';
+    var th = parseFloat($('r-threshold').value) || 0;
+    var winBtn = activeIn('r-window');
+    var win = winBtn ? winBtn.textContent : '5 m';
+    var sevBtn = activeIn('r-sev');
+    var sev = sevBtn ? sevBtn.dataset.sev : 'amber';
+    var sevLabel = sevBtn ? sevBtn.textContent : 'High';
+
+    $('p-name').textContent = name;
+    $('p-cond').textContent = metric + ' ' + opText + ' ' + th + ' for ' + win;
+    $('p-desc').textContent = $('r-desc').value.trim() || 'No notes written yet.';
+    $('p-scope').textContent = ($('r-scope').value.match(/\((.+)\)/) || [0, 'everything'])[1];
+
+    var pill = $('p-sev');
+    pill.className = 'pill pill-' + sev;
+    pill.innerHTML = '<i class="dot"></i>' + sevLabel;
+    $('p-callout').className = 'callout u-mt-1' + (sev === 'rose' ? ' callout-rose' : sev === 'mute' ? ' callout-sky' : '');
+
+    var ch = [];
+    if ($('r-push').checked || sev === 'rose') ch.push('push');
+    if ($('r-email').checked) ch.push('email');
+    if ($('r-webhook').checked) ch.push('webhook');
+    $('p-channels').innerHTML = ch.length
+      ? ch.map(function (c) { return '<span class="chip-f">' + c + '</span>'; }).join('')
+      : '<span class="chip-f">console only</span>';
+
+    var fires = series.filter(function (v) { return above ? v > th : v < th; }).length;
+    $('p-fires').textContent = fires + '×';
+    var noise = $('p-noise');
+    if (fires === 0) { noise.className = 'pill pill-sky'; noise.innerHTML = '<i class="dot"></i>Never fires'; }
+    else if (fires <= 10) { noise.className = 'pill pill-mint'; noise.innerHTML = '<i class="dot"></i>Sensible'; }
+    else if (fires <= 16) { noise.className = 'pill pill-amber'; noise.innerHTML = '<i class="dot"></i>Chatty'; }
+    else { noise.className = 'pill pill-rose'; noise.innerHTML = '<i class="dot"></i>Too noisy'; }
+
+    Proxima.spark(svg, {
+      actual: series, min: 8, max: 34,
+      threshold: th,
+      tooltip: document.getElementById('tt-bt'),
+      unit: 'ms',
+      label: function (i) { return ((18 - (23 - i)) + 24) % 24 + ':00'; }
+    });
+  }
+
+  var form = document.getElementById('rule-form');
+  form.addEventListener('input', render);
+  form.addEventListener('change', render);
+  form.addEventListener('click', function (ev) {
+    if (ev.target.closest('.seg button, .toggle')) setTimeout(render, 0);
+  });
+  render();
+});
+</script>
+</body>
+</html>
