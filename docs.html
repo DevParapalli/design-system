@@ -13,8 +13,10 @@
 <canvas id="ink" width="1400" height="900" aria-hidden="true"></canvas>
 <div class="grain" aria-hidden="true"></div>
 
+<button class="navtoggle navtoggle-float" type="button" data-nav-toggle="#docs-rail" aria-label="Open sections" aria-expanded="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+
 <div class="frame">
-  <nav class="rail" aria-label="Sections">
+  <nav class="rail" id="docs-rail" aria-label="Sections">
     <a class="brand" href="index.html"><span class="orb" aria-hidden="true"></span><span>Proxima<small>Foundation</small></span></a>
     <span class="rail-label">System</span>
     <a href="#principles">Principles</a>
@@ -30,6 +32,7 @@
     <a href="#table">Tables</a>
     <a href="#board">Boards</a>
     <a href="#charts">Charts</a>
+    <a href="#responsive">Responsive</a>
     <span class="rail-label">Pages</span>
     <a href="dashboard.html">Overview →</a>
     <a href="studio.html">Alert studio →</a>
@@ -451,7 +454,7 @@
           <h3>Requests per hour</h3>
           <div class="sub">Last 24 hours. The dotted part is the forecast.</div>
           <div class="chart-wrap">
-            <svg id="doc-spark" class="spark" viewBox="0 0 560 150" preserveAspectRatio="none" role="img" aria-label="Requests per hour over 24 hours with a forecast"></svg>
+            <svg id="doc-spark" class="spark" viewBox="0 0 560 150" role="img" aria-label="Requests per hour over 24 hours with a forecast"></svg>
             <div class="tooltip" id="tt-spark"></div>
           </div>
           <div class="legend"><span class="li"><i></i>Measured</span><span class="li fc"><i></i>Forecast</span></div>
@@ -472,6 +475,48 @@
         </div>
       </div>
       <div class="rule-note">rule: one axis, always. Two measures on different scales become two charts, never one chart with two axes.</div>
+    </section>
+
+    <section id="responsive">
+      <header>
+        <div class="eyebrow">( RESPONSIVE )</div>
+        <h2>The navigation goes off canvas, nothing else disappears</h2>
+        <p>A phone gets the same pages, not a reduced set. Grids collapse on a fixed ladder, the app sidebar and this rail slide in from the left rather than vanishing, and every chart stays readable and inspectable with a finger.</p>
+      </header>
+
+      <h3 class="xh" style="margin-bottom:4px">1 · The ladder</h3>
+      <div class="sub" style="font-size:12.5px;color:var(--ink-low);margin-bottom:12px">Six widths, each owned by a single decision. If a change does not belong to one of these, it does not happen.</div>
+      <div class="audit">
+        <table>
+          <thead><tr><th>Width</th><th>What changes</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>1140</td><td><code style="font-family:var(--font-mono);font-size:11.5px">.settings-cols</code> single column, <code style="font-family:var(--font-mono);font-size:11.5px">.subnav</code> hides</td><td>the "on this page" list stops earning its width</td></tr>
+            <tr><td>1100</td><td><code style="font-family:var(--font-mono);font-size:11.5px">.mosaic</code> spans halve</td><td>twelve columns stop reading as twelve</td></tr>
+            <tr><td>980</td><td><code style="font-family:var(--font-mono);font-size:11.5px">.cols-main</code>, <code style="font-family:var(--font-mono);font-size:11.5px">.panes</code> and the marketing embed go single column</td><td>two columns of data stop fitting side by side</td></tr>
+            <tr><td>880</td><td><code style="font-family:var(--font-mono);font-size:11.5px">.side</code> and <code style="font-family:var(--font-mono);font-size:11.5px">.rail</code> become drawers, <code style="font-family:var(--font-mono);font-size:11.5px">.navtoggle</code> and <code style="font-family:var(--font-mono);font-size:11.5px">.brand-sm</code> appear</td><td>the app shell loses its sidebar column</td></tr>
+            <tr><td>720</td><td><code style="font-family:var(--font-mono);font-size:11.5px">nav.top .links</code> becomes a dropdown panel</td><td>the marketing links stop fitting beside the logo</td></tr>
+            <tr><td>620</td><td>table rows restack, comparison bars narrow, frame padding tightens</td><td>the last width where two columns of anything work</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="rule-note">rule: a collapsed grid column is <code style="font-family:var(--font-mono);font-size:11.5px">minmax(0, 1fr)</code>, never <code style="font-family:var(--font-mono);font-size:11.5px">1fr</code>. A bare <code style="font-family:var(--font-mono);font-size:11.5px">1fr</code> is <code style="font-family:var(--font-mono);font-size:11.5px">minmax(auto, 1fr)</code> and cannot shrink below its content, which is how a chart ends up half off the screen.</div>
+
+      <h3 class="xh" style="margin:22px 0 4px">2 · The drawer, <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--ink-low)">.navtoggle</code> and <code style="font-family:var(--font-mono);font-size:12.5px;color:var(--ink-low)">data-nav-toggle</code></h3>
+      <div class="sub" style="font-size:12.5px;color:var(--ink-low);margin-bottom:12px">One button, one attribute, whose value is a selector for the panel it opens. Everything else is wired for you: the shared scrim, focus moved into the drawer and trapped there, Escape to close and return focus to the button, a tap on any link inside to close, and a forced close when the viewport goes back above the breakpoint. Add <code style="font-family:var(--font-mono);font-size:12px">data-nav-breakpoint</code> when the panel collapses somewhere other than 880, as the marketing pages do at 720.</div>
+      <div class="demo-row">
+        <button class="navtoggle" type="button" style="display:grid" aria-label="Navigation toggle specimen"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <span class="t-data">&lt;button class="navtoggle" data-nav-toggle="#app-nav"&gt;</span>
+      </div>
+      <div class="sub" style="font-size:12.5px;color:var(--ink-low);margin-top:10px">Narrow this window past 880 and the live one appears in the top left, over the rail it opens. On the console pages it sits at the head of the topbar instead, because there is already a bar to put it in.</div>
+      <div class="rule-note">rule: a closed drawer is <code style="font-family:var(--font-mono);font-size:11.5px">visibility: hidden</code>, not <code style="font-family:var(--font-mono);font-size:11.5px">display: none</code>. Hidden keeps its links out of the tab order, which display would also do, but it still allows the panel to slide.</div>
+
+      <h3 class="xh" style="margin:22px 0 4px">3 · Charts under a finger</h3>
+      <div class="sub" style="font-size:12.5px;color:var(--ink-low);margin-bottom:12px">A spark chart measures its own box and sets its <code style="font-family:var(--font-mono);font-size:12px">viewBox</code> so that one user unit is one CSS pixel. Nothing is scaled unevenly, which is what keeps the dotted forecast dotted at 390px wide instead of thinning into blank space. Press and drag the chart above for the crosshair and the readout, and let go to dismiss it. The chart claims sideways drags and leaves vertical ones to the page, so scrolling over it still works.</div>
+      <div class="rule-note">rule: never set <code style="font-family:var(--font-mono);font-size:11.5px">preserveAspectRatio="none"</code> on a chart. It buys a chart that fills its box and costs you every stroke width, dash and radius in it.</div>
+
+      <h3 class="xh" style="margin:22px 0 4px">4 · The background on a small screen</h3>
+      <div class="sub" style="font-size:12.5px;color:var(--ink-low);margin-bottom:12px">The blooms are placed as fractions of the canvas box rather than at fixed coordinates, so they stay round on a tall narrow screen instead of smearing into vertical bands. Below 880 the blur softens from 90px to 60px, and the grain drops its blend mode, which removes a full screen compositing layer and the banding it used to show over flat mode. Flat itself now stops painting and animating the ink layer altogether rather than leaving it running at zero opacity.</div>
+      <div class="rule-note">rule: flat is a real mode, not a hidden one. If the switch says the atmosphere is off, nothing about it should still be costing the device work.</div>
     </section>
   </main>
 </div>

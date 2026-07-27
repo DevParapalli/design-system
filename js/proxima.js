@@ -28,7 +28,41 @@
   var themeFixed = root.getAttribute('data-proxima-theme') === 'fixed-dark';
 
   function isLight() { return root.classList.contains('theme-light'); }
-  function repaint() { for (var i = 0; i < painters.length; i++) painters[i](isLight(), accentNow); }
+  function isFlat() { return root.classList.contains('bg-flat'); }
+  /* a painter that throws must not be able to take the rest of the file with
+     it, or window.Proxima below never gets its charts drawn */
+  function repaint() {
+    for (var i = 0; i < painters.length; i++) {
+      try { painters[i](isLight(), accentNow); } catch (e) {}
+    }
+  }
+
+  /* Size a canvas bitmap from its own box, so a composition authored for one
+     aspect ratio is not stretched into another, then scale the context so the
+     drawing code below can work in CSS pixels. `cap` bounds the long edge (a
+     90px blur does not need a 1:1 bitmap); `dpr` is 1 for blurred layers and
+     devicePixelRatio for sharp textures. Returns [cssW, cssH], or null when
+     the element has no laid-out box yet. */
+  function sizeCanvas(cv, ctx, cap, dpr) {
+    var r = cv.getBoundingClientRect();
+    if (!r.width || !r.height) return null;
+    var scale = (dpr || 1) * Math.min(1, cap / Math.max(r.width, r.height));
+    var W = Math.max(1, Math.round(r.width * scale));
+    var H = Math.max(1, Math.round(r.height * scale));
+    if (cv.width !== W) cv.width = W;
+    if (cv.height !== H) cv.height = H;
+    ctx.setTransform(W / r.width, 0, 0, H / r.height, 0, 0);
+    return [r.width, r.height];
+  }
+
+  /* ---------- public API ----------
+     Assigned before the atmosphere and restore code so that a failure down
+     there can never leave pages without Proxima.spark. */
+  window.Proxima = {
+    spark: spark,
+    onRepaint: function (fn) { painters.push(fn); fn(isLight(), accentNow); },
+    setTheme: setTheme, setAccent: setAccent, setBg: setBg
+  };
 
   /* ---------- fixed background ink (#ink) ---------- */
   function bloomOn(ctx, x, y, r, color, a) {
@@ -37,9 +71,12 @@
     ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
   }
   var ink = document.getElementById('ink');
-  if (ink) {
-    var inkCtx = ink.getContext('2d');
-    var inkPos = [[240, 140, 520], [1180, 130, 460], [1230, 760, 540], [160, 800, 430], [700, 460, 700]];
+  /* getContext can return null under mobile memory pressure */
+  var inkCtx = ink && ink.getContext('2d');
+  if (ink && inkCtx) {
+    /* positions are fractions of the box, so the blooms stay round on a phone
+       instead of smearing vertically (radii are a fraction of the long edge) */
+    var inkPos = [[.171, .156, .371], [.843, .144, .329], [.879, .844, .386], [.114, .889, .307], [.5, .511, .5]];
     var inkSets = {
       indigo: { dark: [['rgba(87,87,217,A)', .34], ['rgba(141,92,240,A)', .22], ['rgba(87,87,217,A)', .20], ['rgba(47,169,124,A)', .13], ['rgba(43,45,92,A)', .30]],
                 light: [['rgba(87,87,217,A)', .16], ['rgba(141,92,240,A)', .13], ['rgba(87,87,217,A)', .11], ['rgba(31,138,99,A)', .09]] },
@@ -51,17 +88,21 @@
                 light: [['rgba(102,121,10,A)', .11], ['rgba(31,138,99,A)', .09], ['rgba(102,121,10,A)', .08], ['rgba(80,80,214,A)', .05]] }
     };
     painters.push(function (light, accent) {
-      inkCtx.clearRect(0, 0, 1400, 900);
+      if (isFlat()) return;                     /* nothing to paint, the layer is hidden */
+      var d = sizeCanvas(ink, inkCtx, 900, 1);
+      if (!d) return;
+      var W = d[0], H = d[1], long = Math.max(W, H);
+      inkCtx.clearRect(0, 0, W, H);
       var set = (inkSets[accent] || inkSets.indigo)[light ? 'light' : 'dark'];
-      for (var i = 0; i < set.length; i++) bloomOn(inkCtx, inkPos[i][0], inkPos[i][1], inkPos[i][2], set[i][0], set[i][1]);
+      for (var i = 0; i < set.length; i++) bloomOn(inkCtx, inkPos[i][0] * W, inkPos[i][1] * H, inkPos[i][2] * long, set[i][0], set[i][1]);
     });
   }
 
   /* ---------- marketing hero blooms (#hero-ink) ---------- */
   var hero = document.getElementById('hero-ink');
-  if (hero) {
-    var heroCtx = hero.getContext('2d');
-    var heroPos = [[600, 210, 500], [280, 90, 340], [950, 120, 360], [600, 640, 620]];
+  var heroCtx = hero && hero.getContext('2d');
+  if (hero && heroCtx) {
+    var heroPos = [[.5, .263, .417], [.233, .113, .283], [.792, .15, .3], [.5, .8, .517]];
     var heroSets = {
       indigo: [['rgba(87,87,217,A)', .5], ['rgba(141,92,240,A)', .34], ['rgba(62,156,214,A)', .22], ['rgba(20,21,40,A)', .9]],
       teal:   [['rgba(15,160,175,A)', .45], ['rgba(62,156,214,A)', .3], ['rgba(87,87,217,A)', .18], ['rgba(12,32,36,A)', .9]],
@@ -69,9 +110,12 @@
       lime:   [['rgba(157,187,46,A)', .38], ['rgba(47,169,124,A)', .24], ['rgba(87,87,217,A)', .14], ['rgba(26,32,10,A)', .9]]
     };
     painters.push(function (light, accent) {
-      heroCtx.clearRect(0, 0, 1200, 800);
+      var d = sizeCanvas(hero, heroCtx, 900, 1);
+      if (!d) return;
+      var W = d[0], H = d[1], long = Math.max(W, H);
+      heroCtx.clearRect(0, 0, W, H);
       var set = heroSets[accent] || heroSets.indigo;
-      for (var i = 0; i < set.length; i++) bloomOn(heroCtx, heroPos[i][0], heroPos[i][1], heroPos[i][2], set[i][0], set[i][1]);
+      for (var i = 0; i < set.length; i++) bloomOn(heroCtx, heroPos[i][0] * W, heroPos[i][1] * H, heroPos[i][2] * long, set[i][0], set[i][1]);
     });
   }
 
@@ -87,7 +131,13 @@
     painters.push(function (light, accent) {
       var tints = tintSets[accent] || tintSets.indigo;
       tcanvases.forEach(function (cv, ci) {
-        var g = cv.getContext('2d'), Wc = cv.width, Hc = cv.height;
+        var g = cv.getContext('2d');
+        if (!g) return;
+        /* these are sharp textures rather than blurs, so they want the real
+           device pixel ratio (capped, a phone at 3x buys nothing here) */
+        var d = sizeCanvas(cv, g, 900, Math.min(window.devicePixelRatio || 1, 2));
+        if (!d) return;
+        var Wc = d[0], Hc = d[1];
         var pair = tints[ci % tints.length];
         g.fillStyle = '#0C0D17'; g.fillRect(0, 0, Wc, Hc);
         var seed = ci * 7 + 3;
@@ -114,6 +164,91 @@
     });
   }
 
+  /* Every canvas above is sized from its own box, so all of them have to be
+     repainted when those boxes change. Coalesced through rAF so that an
+     orientation change and its resize storm cost one repaint. */
+  var resizeQueued = false;
+  function onViewportChange() {
+    if (resizeQueued) return;
+    resizeQueued = true;
+    requestAnimationFrame(function () { resizeQueued = false; repaint(); });
+  }
+  window.addEventListener('resize', onViewportChange);
+  window.addEventListener('orientationchange', onViewportChange);
+
+  /* ---------- mobile nav drawer ----------
+     Markup contract:  <button class="navtoggle" data-nav-toggle="#drawer-id"
+                               data-nav-breakpoint="880" aria-expanded="false">
+     The attribute value is a selector for the panel the button opens. One
+     scrim is shared by every drawer on the page and injected on first use. */
+  var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
+  /* The scrim is inserted as a sibling of the drawer, never on <body>. .shell,
+     .frame and .page all set position + z-index and so open stacking contexts;
+     a scrim outside one would paint over the very drawer it is meant to sit
+     behind, dimming it and swallowing every tap on its links. As a sibling the
+     two are in one stacking context and 8 < 9 always holds. It is fixed, so it
+     stays out of the grid and flex flow of whichever parent takes it. */
+  function makeScrim(panel) {
+    var s = document.createElement('div');
+    s.className = 'scrim';
+    s.setAttribute('aria-hidden', 'true');
+    if (panel.parentNode) panel.parentNode.insertBefore(s, panel);
+    else document.body.appendChild(s);
+    return s;
+  }
+  function wireNavToggle(btn) {
+    var panel = document.querySelector(btn.getAttribute('data-nav-toggle') || '');
+    if (!panel) return;
+    var bp = parseInt(btn.getAttribute('data-nav-breakpoint'), 10) || 880;
+    var isOpen = false;
+    var scrim = makeScrim(panel);
+
+    /* no focus-trap utility exists in this file, so keep a small local one:
+       the toggle stays in the loop, which is what makes the drawer dismissable
+       by keyboard alone. */
+    function onKey(ev) {
+      if (ev.key === 'Escape') { setOpen(false); btn.focus(); return; }
+      if (ev.key !== 'Tab') return;
+      var items = panel.querySelectorAll(FOCUSABLE);
+      if (!items.length) return;
+      var first = items[0], last = items[items.length - 1], act = document.activeElement;
+      if (act === btn) { ev.preventDefault(); (ev.shiftKey ? last : first).focus(); }
+      else if (ev.shiftKey && act === first) { ev.preventDefault(); btn.focus(); }
+      else if (!ev.shiftKey && act === last) { ev.preventDefault(); btn.focus(); }
+    }
+    function setOpen(next) {
+      if (next === isOpen) return;
+      isOpen = next;
+      panel.classList.toggle('open', isOpen);
+      scrim.classList.toggle('on', isOpen);
+      root.classList.toggle('nav-open', isOpen);
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      if (isOpen) {
+        document.addEventListener('keydown', onKey);
+        var first = panel.querySelector(FOCUSABLE);
+        if (first) first.focus();
+      } else {
+        document.removeEventListener('keydown', onKey);
+      }
+    }
+
+    btn.setAttribute('aria-expanded', 'false');
+    if (panel.id) btn.setAttribute('aria-controls', panel.id);
+    btn.addEventListener('click', function () { setOpen(!isOpen); });
+    scrim.addEventListener('click', function () { setOpen(false); });
+    /* a link tap closes the drawer, which matters for docs, whose rail is
+       entirely in-page anchors */
+    panel.addEventListener('click', function (ev) {
+      if (ev.target && ev.target.closest && ev.target.closest('a')) setOpen(false);
+    });
+    /* above the breakpoint the drawer is ordinary layout again, so drop the state */
+    var mq = window.matchMedia('(max-width: ' + bp + 'px)');
+    var onMq = function () { if (!mq.matches) setOpen(false); };
+    if (mq.addEventListener) mq.addEventListener('change', onMq);
+    else if (mq.addListener) mq.addListener(onMq);
+  }
+  document.querySelectorAll('[data-nav-toggle]').forEach(wireNavToggle);
+
   /* ---------- display options FAB ---------- */
   var fab = document.getElementById('fab'), fabBtn = document.getElementById('fab-toggle');
   if (fab && fabBtn) {
@@ -129,6 +264,8 @@
     root.classList.toggle('bg-flat', flat);
     if (bInk) bInk.classList.toggle('on', !flat);
     if (bFlat) bFlat.classList.toggle('on', flat);
+    /* the ink painter skips itself while flat, so paint it back on the way out */
+    if (!flat) repaint();
     if (save !== false) try { localStorage.setItem('proxima-bg', flat ? 'flat' : 'ink'); } catch (e) {}
   }
   function setTheme(light, save) {
@@ -301,15 +438,37 @@
 
   /* ---------- spark chart builder ---------- */
   var NS = 'http://www.w3.org/2000/svg', gradSeq = 0;
+  /* The viewBox is measured from the host box, so a chart has to be redrawn
+     when that box changes. This also covers the first render of a chart that
+     was not laid out yet when spark() was called. */
+  var sparkObs = window.ResizeObserver ? new ResizeObserver(function (entries) {
+    for (var i = 0; i < entries.length; i++) {
+      var el = entries[i].target, r = entries[i].contentRect;
+      if (!el._pxOpts || !r.width || !r.height) continue;
+      if (Math.round(r.width) === el._pxW && Math.round(r.height) === el._pxH) continue;
+      spark(el, el._pxOpts);
+    }
+  }) : null;
+
   function spark(svg, opts) {
     if (!svg) return;
     opts = opts || {};
+    svg._pxOpts = opts;
+    /* observe once: re-observing can re-fire the initial callback */
+    if (sparkObs && !svg._pxObserved) { svg._pxObserved = true; sparkObs.observe(svg); }
     var actual = opts.actual || [];
     var forecast = opts.forecast || [];
     var all = actual.concat(forecast);
     if (!all.length) return;
-    var vb = (svg.getAttribute('viewBox') || '0 0 560 150').split(/\s+/);
-    var W = parseFloat(vb[2]), H = parseFloat(vb[3]);
+
+    /* One user unit is one CSS pixel. That is what stops dasharrays, stroke
+       widths and circles being scaled anisotropically on a narrow screen, and
+       with the aspect matched the default preserveAspectRatio is a no-op. */
+    var box = svg.getBoundingClientRect();
+    if (!box.width || !box.height) return;   /* not laid out yet, the observer retries */
+    var W = box.width, H = box.height;
+    svg._pxW = Math.round(W); svg._pxH = Math.round(H);
+    svg.setAttribute('viewBox', '0 0 ' + W.toFixed(2) + ' ' + H.toFixed(2));
     var PAD = opts.pad != null ? opts.pad : 10;
     var max = opts.max != null ? opts.max : Math.max.apply(null, all) * 1.12;
     var min = opts.min != null ? opts.min : Math.min.apply(null, all) * 0.82;
@@ -325,13 +484,30 @@
     }
     var aPts = actual.map(function (v, i) { return [px(i), py(v)]; });
     var fPts = forecast.map(function (v, i) { return [px(actual.length - 1 + i), py(v)]; });
-    if (aPts.length) fPts.unshift(aPts[aPts.length - 1]);
-    function el(n, attrs) { var e = document.createElementNS(NS, n); for (var k in attrs) e.setAttribute(k, attrs[k]); svg.appendChild(e); return e; }
-    svg.innerHTML = '';
+    if (!aPts.length) return;   /* forecast-only series: bail before clearing, not after */
+    fPts.unshift(aPts[aPts.length - 1]);
+    function el(n, attrs, parent) { var e = document.createElementNS(NS, n); for (var k in attrs) e.setAttribute(k, attrs[k]); (parent || svg).appendChild(e); return e; }
+
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    /* spark() may be called repeatedly (live-preview forms), so drop the
+       previous listeners before rebuilding rather than stacking them up */
+    if (svg._pxHandlers) {
+      var prev = svg._pxHandlers;
+      svg.removeEventListener('pointerdown', prev.down);
+      svg.removeEventListener('pointermove', prev.move);
+      svg.removeEventListener('pointerup', prev.up);
+      svg.removeEventListener('pointercancel', prev.up);
+      svg.removeEventListener('pointerleave', prev.leave);
+      svg._pxHandlers = null;
+    }
+
+    /* built through the DOM rather than innerHTML: innerHTML on an SVG element
+       is the weakest construct in this file on WebKit */
     var gid = 'proxima-sparkfill-' + (++gradSeq);
-    var defs = document.createElementNS(NS, 'defs');
-    defs.innerHTML = '<linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--ch-1)" stop-opacity=".28"/><stop offset="1" style="stop-color:var(--ch-1)" stop-opacity="0"/></linearGradient>';
-    svg.appendChild(defs);
+    var defs = el('defs', {});
+    var lg = el('linearGradient', { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+    el('stop', { offset: 0, style: 'stop-color:var(--ch-1)', 'stop-opacity': .28 }, lg);
+    el('stop', { offset: 1, style: 'stop-color:var(--ch-1)', 'stop-opacity': 0 }, lg);
     [0.25, 0.5, 0.75].forEach(function (f) {
       el('line', { x1: PAD, x2: W - PAD, y1: (PAD + f * (H - 2 * PAD)).toFixed(1), y2: (PAD + f * (H - 2 * PAD)).toFixed(1), style: 'stroke:var(--gridline)', 'stroke-width': 1 });
     });
@@ -349,12 +525,6 @@
     /* crosshair + tooltip (only when a tooltip element is provided) */
     var tt = opts.tooltip;
     if (!tt) return;
-    /* spark() may be called repeatedly (live-preview forms), drop the previous
-       listeners so they don't stack up on the same element */
-    if (svg._pxHandlers) {
-      svg.removeEventListener('mousemove', svg._pxHandlers.move);
-      svg.removeEventListener('mouseleave', svg._pxHandlers.leave);
-    }
     var cross = el('line', { x1: 0, x2: 0, y1: PAD, y2: H - PAD, style: 'stroke:var(--crosshair)', 'stroke-width': 1, opacity: 0 });
     var dot = el('circle', { r: 4.5, style: 'fill:var(--ch-1);stroke:var(--void)', 'stroke-width': 2, opacity: 0 });
     var wrap = svg.parentElement;
@@ -362,7 +532,7 @@
     var labelFor = opts.label || function (i) {
       return i < actual.length ? 'day ' + (i + 1) : 'forecast +' + (i - actual.length + 1);
     };
-    var onMove = function (ev) {
+    var show = function (ev) {
       var r = svg.getBoundingClientRect();
       var fx = (ev.clientX - r.left) / r.width * W;
       var i = Math.round((fx - PAD) / ((W - 2 * PAD) / (all.length - 1)));
@@ -378,18 +548,30 @@
       tt.style.top = Math.max(4, ly - tt.offsetHeight - 14) + 'px';
       tt.style.opacity = 1;
     };
-    var onLeave = function () {
+    var hide = function () {
       cross.setAttribute('opacity', 0); dot.setAttribute('opacity', 0); tt.style.opacity = 0;
     };
-    svg.addEventListener('mousemove', onMove);
-    svg.addEventListener('mouseleave', onLeave);
-    svg._pxHandlers = { move: onMove, leave: onLeave };
-  }
 
-  /* ---------- public API ---------- */
-  window.Proxima = {
-    spark: spark,
-    onRepaint: function (fn) { painters.push(fn); fn(isLight(), accentNow); },
-    setTheme: setTheme, setAccent: setAccent, setBg: setBg
-  };
+    /* Pointer events, so the readout is reachable by touch. A mouse keeps
+       plain hover; a finger has to press before the chart tracks it, and
+       releasing dismisses the readout. Touch pointers are implicitly captured
+       to the element that took the pointerdown, so a drag keeps reporting even
+       once it leaves the chart, and a vertical scroll arrives as a
+       pointercancel (see touch-action: pan-y on .chart-wrap svg.spark). */
+    var tracking = false;
+    var onDown = function (ev) {
+      if (ev.pointerType === 'mouse') return;
+      tracking = true;
+      show(ev);
+    };
+    var onMove = function (ev) { if (ev.pointerType === 'mouse' || tracking) show(ev); };
+    var onUp = function () { if (tracking) { tracking = false; hide(); } };
+    var onLeave = function (ev) { if (ev.pointerType === 'mouse') hide(); };
+    svg.addEventListener('pointerdown', onDown);
+    svg.addEventListener('pointermove', onMove);
+    svg.addEventListener('pointerup', onUp);
+    svg.addEventListener('pointercancel', onUp);
+    svg.addEventListener('pointerleave', onLeave);
+    svg._pxHandlers = { down: onDown, move: onMove, up: onUp, leave: onLeave };
+  }
 })();

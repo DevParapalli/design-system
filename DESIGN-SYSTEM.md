@@ -169,10 +169,20 @@ Eyebrows are mono, uppercase, and wrapped in parentheses. Numbers in tables and 
 
 ### Atmosphere
 
-`#ink` is a full viewport canvas holding soft radial blooms in the accent family, blurred to 90px,
-drifting over 46 seconds. It respects reduced motion and can be switched off with `html.bg-flat`.
-`.grain` is a fixed SVG noise overlay at 5 percent. `.dots` is a masked dot grid used only in the
-hero of the project page.
+`#ink` is a full viewport canvas holding soft radial blooms in the accent family, blurred to 90px
+above 880px and 60px below it, drifting over 46 seconds. It respects reduced motion. The bloom
+positions are fractions of the canvas box rather than fixed coordinates, and the bitmap is sized from
+that box on load and on every resize, so the composition keeps its shape on a tall narrow screen
+instead of smearing into vertical bands.
+
+`html.bg-flat` switches it off properly: the layer stops being painted, is taken out of the
+compositing tree with `visibility: hidden`, and its drift animation is cancelled. Flat is a real
+mode, not a hidden one, so nothing about the atmosphere should still be costing the device work once
+it is off.
+
+`.grain` is a fixed SVG noise overlay at 5 percent. It drops its `mix-blend-mode` below 880px and on
+the light theme, which removes a full screen blend group and the banding that overlay noise showed
+over a flat background. `.dots` is a masked dot grid used only in the hero of the project page.
 
 ---
 
@@ -180,7 +190,7 @@ hero of the project page.
 
 - `html.theme-light` switches to the light theme. Every component follows, with no per page work.
 - `html.accent-teal`, `-ember` or `-lime` switches the accent. No class means indigo.
-- `html.bg-flat` hides the background blooms.
+- `html.bg-flat` switches off the background blooms, painting and all.
 - `<html data-proxima-theme="fixed-dark">` opts a page out of the light theme. The project page uses
   this because its sections are written as a dark to light to dark sequence.
 
@@ -204,6 +214,28 @@ height?
 
 Never put a tall table and a short card in the same `.mosaic` row. Grid rows match their tallest
 cell, and the hole that leaves is exactly what `.cols-main` and `.stack` exist to avoid.
+
+### Breakpoints
+
+Six widths, each owned by a single decision. A change that does not belong to one of these does not
+happen.
+
+| Width | What changes |
+| --- | --- |
+| 1140 | `.settings-cols` goes single column, `.subnav` hides |
+| 1100 | `.mosaic` spans halve |
+| 980 | `.cols-main`, `.panes` and the marketing embed go single column |
+| 880 | `.side` and `.rail` become drawers, `.navtoggle` and `.brand-sm` appear |
+| 720 | `nav.top .links` becomes a dropdown panel |
+| 620 | table rows restack, comparison bars narrow, frame padding tightens |
+
+A collapsed grid column is always `minmax(0, 1fr)`, never a bare `1fr`. `1fr` means
+`minmax(auto, 1fr)`, which cannot shrink below its content, and a chart or a wide table inside one
+ends up pushed off the side of the screen. `.stack` and `.pane` carry `min-width: 0` for the same
+reason.
+
+Full height shells declare `100vh` and then `100dvh`, so the layout follows a mobile URL bar as it
+collapses instead of leaving a seam.
 
 ---
 
@@ -261,9 +293,16 @@ surfaces means working out which one owns your edit.
   state colour so you can read the lane before reading a word. Cards stay neutral so the wash comes
   through.
 - Charts: `Proxima.spark()` draws a line with an optional dotted forecast, an optional dashed
-  threshold and a crosshair tooltip. `.bars` with `.brow` draws comparison bars, with `.lead` marking
+  threshold and a crosshair tooltip. It measures its host and sets a `viewBox` where one user unit is
+  one CSS pixel, then redraws on resize, so stroke widths, dashes and radii are never scaled
+  unevenly. Never set `preserveAspectRatio="none"` on a chart: it buys a chart that fills its box and
+  costs you every mark in it. The crosshair takes pointer input, so a mouse hovers and a finger
+  presses, drags and releases. `.bars` with `.brow` draws comparison bars, with `.lead` marking
   the subject. `.meter` is the segmented capsule meter. `.donut` is a plain SVG donut. Use one axis
   always. Two measures on different scales become two charts.
+- Colour on an SVG mark goes through `style="stroke: var(--ch-1)"`, never a `stroke="var(--ch-1)"`
+  presentation attribute. WebKit does not substitute custom properties in presentation attributes, so
+  the attribute form silently paints nothing there.
 - `.feed` with `.fitem` is the timestamped event list with coloured dots.
 
 ### Navigation
@@ -277,6 +316,24 @@ surfaces means working out which one owns your edit.
   and `.settings-cols`. It is scroll spied and hides below 1140px. It exists so a wide screen carries
   something useful instead of empty space.
 - `nav.top` is the marketing nav. `.fab` is the floating theme panel.
+
+Below the breakpoint where a nav stops fitting, it goes off canvas rather than away. `.side` and
+`.rail` become fixed drawers that slide in from the left, and `nav.top .links` becomes a dropdown
+panel under the bar. A closed drawer is `visibility: hidden` rather than `display: none`, which keeps
+its links out of the tab order while still allowing the panel to slide.
+
+The toggle is one button and one attribute:
+
+```html
+<button class="navtoggle" data-nav-toggle="#app-nav" aria-label="Open navigation">…</button>
+```
+
+`data-nav-toggle` holds a selector for the panel to open. `proxima.js` wires the rest: the shared
+scrim, `aria-expanded`, focus moved into the drawer and trapped there with the button kept in the
+loop, Escape to close and return focus, a tap on any link inside to close, and a forced close when
+the viewport goes back above the breakpoint. Add `data-nav-breakpoint="720"` when the panel collapses
+somewhere other than 880, as the marketing pages do. `.navtoggle-float` is the variant for a page
+with no bar to host the button, pinned top left so it never meets the `.fab` bottom right.
 
 ---
 

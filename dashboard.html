@@ -14,7 +14,7 @@
 <div class="grain" aria-hidden="true"></div>
 
 <div class="shell">
-  <aside class="side">
+  <aside class="side" id="app-nav">
     <a class="brand" href="index.html"><span class="orb" aria-hidden="true"></span><span>Proxima<small>Console</small></span></a>
     <span class="rail-label">Infrastructure</span>
     <nav aria-label="Infrastructure">
@@ -39,6 +39,7 @@
 
   <div>
     <div class="topbar">
+      <button class="navtoggle" type="button" data-nav-toggle="#app-nav" aria-label="Open navigation" aria-expanded="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <a class="brand brand-sm" href="index.html"><span class="orb" aria-hidden="true"></span><span>Proxima</span></a>
       <label class="input"><span aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20.5 20.5-4.5-4.5"/></svg></span><input type="text" placeholder="Search hosts and services"></label>
       <div class="seg" role="group" aria-label="Time range"><button class="on" type="button">24h</button><button type="button">7d</button><button type="button">30d</button></div>
@@ -93,7 +94,7 @@
             <h3>Requests per hour</h3>
             <div class="sub">Last 24 hours across all services. The dotted line is the forecast.</div>
             <div class="chart-wrap">
-              <svg id="dash-spark" class="spark" viewBox="0 0 560 150" preserveAspectRatio="none" role="img" aria-label="Requests per hour over the last 24 hours, with a 6 hour forecast"></svg>
+              <svg id="dash-spark" class="spark" viewBox="0 0 560 150" role="img" aria-label="Requests per hour over the last 24 hours, with a 6 hour forecast"></svg>
               <div class="tooltip" id="tt-dash"></div>
             </div>
             <div class="legend"><span class="li"><i></i>Measured</span><span class="li fc"><i></i>Forecast</span></div>
@@ -188,13 +189,15 @@
             <div class="donut-wrap">
               <svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Service health: 88 percent healthy, 6 percent degraded, 3 percent down, 3 percent stopped">
                 <g transform="rotate(-90 21 21)">
-                  <circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--ch-2)" stroke-width="4" stroke-dasharray="88 12" stroke-dashoffset="25"/>
-                  <circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--ch-3)" stroke-width="4" stroke-dasharray="6 94" stroke-dashoffset="37"/>
-                  <circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--ch-4)" stroke-width="4" stroke-dasharray="3 97" stroke-dashoffset="31"/>
-                  <circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--ch-neutral)" stroke-width="4" stroke-dasharray="3 97" stroke-dashoffset="28"/>
+                  <!-- stroke goes through style, not a presentation attribute: WebKit does
+                       not substitute custom properties in presentation attributes -->
+                  <circle cx="21" cy="21" r="15.9155" fill="none" style="stroke: var(--ch-2)" stroke-width="4" stroke-dasharray="88 12" stroke-dashoffset="25"/>
+                  <circle cx="21" cy="21" r="15.9155" fill="none" style="stroke: var(--ch-3)" stroke-width="4" stroke-dasharray="6 94" stroke-dashoffset="37"/>
+                  <circle cx="21" cy="21" r="15.9155" fill="none" style="stroke: var(--ch-4)" stroke-width="4" stroke-dasharray="3 97" stroke-dashoffset="31"/>
+                  <circle cx="21" cy="21" r="15.9155" fill="none" style="stroke: var(--ch-neutral)" stroke-width="4" stroke-dasharray="3 97" stroke-dashoffset="28"/>
                 </g>
                 <text x="21" y="20.5" text-anchor="middle" style="font: 500 7px var(--font-ui); fill: var(--ink-hi)">33</text>
-                <text x="21" y="26" text-anchor="middle" style="font: 400 2.6px var(--font-mono); letter-spacing: .3px; fill: var(--ink-low)">SERVICES</text>
+                <text x="21" y="26" text-anchor="middle" style="font: 400 3.4px var(--font-mono); letter-spacing: .3px; fill: var(--ink-low)">SERVICES</text>
               </svg>
               <div class="donut-legend">
                 <span class="li"><i style="background:var(--ch-2)"></i>Healthy<b>29</b></span>

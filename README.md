@@ -5,7 +5,7 @@ A dark-first UI system for a homelab console, built around tinted neutrals, a si
 ## What this project contains
 
 - `css/proxima.css` — the complete design system in one stylesheet
-- `js/proxima.js` — optional behavior for theme switching, background blooms, responsive charts, save bar state, and scroll spy
+- `js/proxima.js` — optional behavior for theme switching, background blooms, the mobile nav drawer, responsive charts with touch inspection, save bar state, and scroll spy
 - `fonts/` — local OFL font files for Outfit, Instrument Serif, and IBM Plex Mono
 - sample pages:
   - `index.html`
@@ -55,6 +55,22 @@ Use one save bar per page and choose layout classes based on card height:
 - `mosaic` for same-height tiles
 - `cols-main` + `stack` for independent columns
 - `panes` for editor / preview split layouts
+
+Collapsed grid columns take `minmax(0, 1fr)` rather than a bare `1fr`, so wide children such as
+charts and tables cannot push past the edge of a phone screen.
+
+### Mobile navigation
+
+Give the panel an id and point a toggle button at it. Everything else is wired by `proxima.js`:
+
+```html
+<button class="navtoggle" data-nav-toggle="#app-nav" aria-label="Open navigation">…</button>
+<aside class="side" id="app-nav">…</aside>
+```
+
+`.side` and `.rail` become off-canvas drawers below 880px, `nav.top .links` becomes a dropdown below
+720px, and `data-nav-breakpoint` overrides the default of 880. Use `.navtoggle-float` on a page with
+no top bar to host the button.
 
 ## Files of note
 
